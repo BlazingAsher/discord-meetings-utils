@@ -1,0 +1,19 @@
+{
+  "name": "discord-meetings-utils",
+  "version": "1.0.0",
+  "description": "Utility bot to manage meetings in Discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlazingAsher/discord-meetings-utils.git"
+  },
+  "author": "David Hui",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BlazingAsher/discord-meetings-utils/issues"
+  },
+  "homepage": "https://github.com/BlazingAsher/discord-meetings-utils#readme"
+}
