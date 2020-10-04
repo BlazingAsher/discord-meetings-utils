@@ -5,6 +5,14 @@ const { parse } = require("discord-command-parser");
 const client = new Discord.Client();
 const MeetingsUtils = require('./MeetingsUtils');
 
+const commandMap = {
+    split: [MeetingsUtils.split, "Split all members of the general channels into the breakout channels."],
+    unsplit: [MeetingsUtils.unsplit, "Move all members in the breakout channels to the general channel."],
+    pickRand: [MeetingsUtils.pickRand, "Pick a random person in the voice current channel."],
+    makeOrder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel."],
+    muteAll: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel except yourself."],
+    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel except yourself."]
+}
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -17,15 +25,17 @@ client.on('message', message => {
     // check for valid command
     if (!parsed.success) return;
 
-    // handle command
-    if (parsed.command === "split") {
-        return MeetingsUtils.split(parsed, message);
+
+    if(commandMap.hasOwnProperty(parsed.command)){
+        return commandMap[parsed.command][0](parsed, message);
     }
-    else if(parsed.command === "unsplit"){
-        return MeetingsUtils.unsplit(parsed, message);
-    }
-    else if(parsed.command === "pickrand"){
-        return MeetingsUtils.pickRand(parse, message);
+    else if(parsed.command === "help"){
+        let output = `Current command prefix: \`${process.env.COMMAND_PREFIX}\`\n\n`;
+        for(let entry of Object.keys(commandMap)){
+            output+=`${entry} - ${commandMap[entry][1]}\n`;
+        }
+        console.log(output);
+        return message.channel.send(output);
     }
 });
 
