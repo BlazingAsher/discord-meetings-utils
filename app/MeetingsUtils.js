@@ -126,11 +126,24 @@ MeetingsUtils.muteAll = function(parsed, message, guildSettings){
         return message.channel.send("You are not currently connected to a voice channel!");
     }
 
+    let excluded = [];
+
+    if(parsed.arguments.length > 0){
+        for(let exclusion of parsed.arguments){
+            if(exclusion === "self"){
+                excluded.push(message.member.id);
+            }
+            else{
+                excluded.push(exclusion.substring(3, exclusion.length-1));
+            }
+        }
+    }
+
     let toMute = message.member.voice.channel.members.array();
 
     let counter = 0;
     for(let member of toMute){
-        if(member.id !== message.member.id){
+        if(excluded.indexOf(member.id) === -1){
             member.voice.setMute(true);
             counter++;
         }

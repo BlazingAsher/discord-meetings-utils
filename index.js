@@ -11,12 +11,12 @@ const Settings = require('./models/SettingsModel');
 const SettingsManager = require('./app/SettingsManager');
 
 const commandMap = {
-    split: [MeetingsUtils.split, "Split all members of the general channels into the breakout channels."],
+    split: [MeetingsUtils.split, "Split all members of the general channels into the breakout channels. Specify the number of rooms desired as an argument."],
     unsplit: [MeetingsUtils.unsplit, "Move all members in the breakout channels to the general channel."],
     pickRand: [MeetingsUtils.pickRand, "Pick a random person in the voice current channel."],
     makeOrder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel."],
     muteAll: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel except yourself."],
-    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel except yourself."],
+    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted."],
     setGeneral: [MeetingsUtils.setGeneral, "Sets the general meeting room."],
     addBreakout: [MeetingsUtils.addBreakout, "Adds the current voice channel as a breakout channel."],
     removeBreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel."],
