@@ -11,16 +11,17 @@ const Settings = require('./models/SettingsModel');
 const SettingsManager = require('./app/SettingsManager');
 
 const commandMap = {
-    split: [MeetingsUtils.split, "Split all members of the general channels into the breakout channels. Specify the number of rooms desired as an argument."],
+    split: [MeetingsUtils.split, "Split all users in the general channel into the breakout channels. Specify the number of rooms desired as an argument."],
     unsplit: [MeetingsUtils.unsplit, "Move all members in the breakout channels to the general channel."],
-    pickRand: [MeetingsUtils.pickRand, "Pick a random person in the voice current channel."],
+    pickRand: [MeetingsUtils.pickRand, "Pick a random person in the current voice channel."],
     makeOrder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel."],
-    muteAll: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel except yourself."],
-    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted."],
+    muteAll: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted."],
+    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel."],
     setGeneral: [MeetingsUtils.setGeneral, "Sets the general meeting room."],
     addBreakout: [MeetingsUtils.addBreakout, "Adds the current voice channel as a breakout channel."],
     removeBreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel."],
-    listBreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels."]
+    listBreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels."],
+    setAdmin: [MeetingsUtils.setAdmin, "Sets the role with the given ID as the bot admin role."],
 }
 
 mongoose.connect(process.env.MONGO_DB_URL, {useNewUrlParser: true});
@@ -40,8 +41,8 @@ SettingsManager.loadSettings()
             await Settings.create({
                 guild: guild.id
             });
+            await guild.systemChannel.send("No existing configuration realm exists for this server. Creating a new one.");
         }
-        await guild.systemChannel.send("No existing configuration realm exists for this server. Creating a new one.");
         await SettingsManager.loadSettings();
     });
 
@@ -49,25 +50,30 @@ SettingsManager.loadSettings()
         // call parse function
         let guildSettings = SettingsManager.getGuildSettings(message.guild.id);
 
-        console.log(guildSettings);
+        console.log("Current settings: " + guildSettings);
+        if(guildSettings){
+            const parsed = parse(message, guildSettings.commandPrefix, { allowSpaceBeforeCommand: true });
 
-        const parsed = parse(message, guildSettings.commandPrefix, { allowSpaceBeforeCommand: true });
-
-        // check for valid command
-        if (!parsed.success) return;
+            // check for valid command
+            if (!parsed.success) return;
 
 
-        if(commandMap.hasOwnProperty(parsed.command)){
-            return commandMap[parsed.command][0](parsed, message, guildSettings);
-        }
-        else if(parsed.command === "help"){
-            let output = `Current command prefix: \`${guildSettings.commandPrefix}\`\n\n`;
-            for(let entry of Object.keys(commandMap)){
-                output+=`${entry} - ${commandMap[entry][1]}\n`;
+            if(commandMap.hasOwnProperty(parsed.command)){
+                return commandMap[parsed.command][0](parsed, message, guildSettings);
             }
-            console.log(output);
-            return message.channel.send(output);
+            else if(parsed.command === "help"){
+                let output = `Current command prefix: \`${guildSettings.commandPrefix}\`\n\n`;
+                for(let entry of Object.keys(commandMap)){
+                    output+=`${entry} - ${commandMap[entry][1]}\n`;
+                }
+                return message.channel.send(output);
+            }
         }
+        else{
+            console.log("No settings exist for the current guild! This is normal on first join.");
+        }
+
+
     });
 
     client.login(process.env.DISCORD_BOT_TOKEN);

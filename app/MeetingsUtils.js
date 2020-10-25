@@ -117,7 +117,7 @@ MeetingsUtils.makeOrder = function(parsed, message, guildSettings){
     return message.channel.send(output);
 }
 
-MeetingsUtils.muteAll = function(parsed, message, guildSettings){
+MeetingsUtils.muteAll = async function(parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -146,12 +146,13 @@ MeetingsUtils.muteAll = function(parsed, message, guildSettings){
         if(excluded.indexOf(member.id) === -1){
             member.voice.setMute(true);
             counter++;
+            await sleep(150);
         }
     }
     return message.channel.send(`Muted ${counter} users.`);
 }
 
-MeetingsUtils.unMuteAll = function(parsed, message, guildSettings){
+MeetingsUtils.unMuteAll = async function(parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -166,6 +167,7 @@ MeetingsUtils.unMuteAll = function(parsed, message, guildSettings){
     for(let member of toUnmute){
         member.voice.setMute(false);
         counter++;
+        await sleep(150);
     }
 
     return message.channel.send(`Unmuted ${counter} users.`);
@@ -256,6 +258,29 @@ MeetingsUtils.listBreakouts = function(parsed, message, guildSettings){
         output += "- " + message.guild.channels.cache.get(breakoutID).name + "\n";
     }
     return message.channel.send(output);
+}
+
+MeetingsUtils.setAdmin = async function(parsed, message, guildSettings){
+    if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
+        return;
+    }
+
+    if(parsed.arguments.length === 0){
+        return message.channel.send(`Please specify the ID of the admin role!`);
+    }
+
+    try{
+        await Settings.findOneAndUpdate({
+            guild: message.guild.id,
+        }, {
+            adminRole: parsed.arguments[0]
+        });
+        await SettingsManager.loadSettings();
+        return message.channel.send(`<@&${parsed.arguments[0]}> has been set as the admin role.`);
+    }
+    catch{
+        return message.channel.send("There was an error updating the database.");
+    }
 }
 
 module.exports = MeetingsUtils;

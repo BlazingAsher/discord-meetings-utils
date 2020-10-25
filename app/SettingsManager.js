@@ -4,6 +4,7 @@ let BotSettings = {}
 let SettingsManager = {}
 
 SettingsManager.loadSettings = async function(){
+    console.log("Reloading settings.");
     BotSettings = {};
     let allSettings = await Settings.find({});
     for(let setting of allSettings){
