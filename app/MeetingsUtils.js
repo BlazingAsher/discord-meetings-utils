@@ -69,7 +69,7 @@ async function internalSplit(client, parsed, message, guildSettings, moderators)
         }
     }
 
-    if(to_move.length === 0){
+    if(to_move.length + to_moderators.length === 0){
         return message.channel.send("There are no members to move.");
     }
 
