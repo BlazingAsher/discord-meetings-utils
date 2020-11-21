@@ -388,12 +388,8 @@ MeetingsUtils.removeModerator = async function(client, parsed, message, guildSet
     await Settings.findOneAndUpdate({
         guild: message.guild.id,
     }, {
-        $push: {
-            moderators: {
-                $pull: {
-                    moderators: mention
-                }
-            }
+        $pull: {
+            moderators: mention
         }
     });
 

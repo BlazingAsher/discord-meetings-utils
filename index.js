@@ -22,7 +22,8 @@ const commandMap = {
     removeBreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel."],
     listBreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels."],
     setAdmin: [MeetingsUtils.setAdmin, "Sets the role with the given ID as the bot admin role."],
-    addModerator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list."],
+    addModerator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list. Mention any users (or use \"self\") as arguments."],
+    removeModerator: [MeetingsUtils.removeModerator, "Removes a user from the moderator list. Give the user ID as an argument."],
     listModerators: [MeetingsUtils.listModerators, "Lists current breakout moderators."]
 }
 
