@@ -90,7 +90,7 @@ async function internalSplit(client, parsed, message, guildSettings, moderators)
         }
 
         await sleep(250);
-        member.voice.setChannel(destination_channels[currIndex]);
+        await member.voice.setChannel(destination_channels[currIndex]);
         counter++;
 
         currIndex++;
