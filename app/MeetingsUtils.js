@@ -417,4 +417,18 @@ MeetingsUtils.moderatedSplit = function(client, parsed, message, guildSettings){
     internalSplit(client, parsed, message, guildSettings, guildSettings.moderators)
 }
 
+MeetingsUtils.reloadSettings = async function(client, parsed, message, guildSettings){
+    if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
+        return;
+    }
+
+    try{
+        await SettingsManager.loadSettings();
+    }
+    catch {
+        return message.channel.send("There was an error reloading settings.");
+    }
+    return message.channel.send("Settings reloaded successfully!");
+}
+
 module.exports = MeetingsUtils;

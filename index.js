@@ -26,7 +26,8 @@ const commandMap = {
     moderatedsplit: [MeetingsUtils.moderatedSplit, "Split all users in the general channel into the breakout channels with at least one moderated in each. Specify the number of rooms desired as an argument.", ["msplit"], true],
     addmoderator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list. Mention any users (or use \"self\") as arguments.", ["amod"], true],
     removemoderator: [MeetingsUtils.removeModerator, "Removes a user from the moderator list. Give the user ID as an argument.", ["rmmod"], true],
-    listmoderators: [MeetingsUtils.listModerators, "Lists current breakout moderators.", ["lmod", "lsmod"], false]
+    listmoderators: [MeetingsUtils.listModerators, "Lists current breakout moderators.", ["lmod", "lsmod"], false],
+    reloadsettings: [MeetingsUtils.reloadSettings, "Reloads bot settings from the database.", [], true]
 }
 
 let aliasMap = {}
