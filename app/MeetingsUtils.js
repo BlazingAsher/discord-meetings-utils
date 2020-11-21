@@ -12,7 +12,7 @@ function shuffleArray(array) {
     }
 }
 
-MeetingsUtils.split = async function(parsed, message, guildSettings){
+async function internalSplit(parsed, message, guildSettings, moderators) {
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -21,9 +21,15 @@ MeetingsUtils.split = async function(parsed, message, guildSettings){
         return message.channel.send("Please enter the number of groups required.");
     }
 
+    const numDesiredChannels = parseInt(parsed.arguments[0]);
+
     // get a list of all the breakout channels
     let destination_channels = [];
     for(let channelID of guildSettings.breakoutChannels){
+        // limit channels to only the amount desired
+        if(destination_channels.length === numDesiredChannels){
+            break;
+        }
         destination_channels.push(message.guild.channels.cache.get(channelID));
     }
 
@@ -39,15 +45,35 @@ MeetingsUtils.split = async function(parsed, message, guildSettings){
     }
 
     let to_move = general_channel.members.array();
+    let to_moderators = [];
+
+    for(let i = 0;i<to_move.length;i++){
+        if(moderators.indexOf(to_move[i].id) !== -1){
+            to_moderators.push(to_move[i]);
+            to_move.splice(i,1);
+        }
+    }
+
     if(to_move.length === 0){
         return message.channel.send("There are no members to move.");
     }
+
+    shuffleArray(to_moderators);
+
     shuffleArray(to_move);
 
     let currIndex = 0;
     let counter = 0;
-    while(true){
-        let member = to_move.shift();
+    while(destination_channels.length > 0){
+        let member;
+        // first move the moderators
+        if(to_moderators.length > 0){
+            member = to_moderators.shift();
+        }
+        else{
+            member = to_move.shift();
+        }
+
         await sleep(250);
         member.voice.setChannel(destination_channels[currIndex]);
         counter++;
@@ -57,12 +83,16 @@ MeetingsUtils.split = async function(parsed, message, guildSettings){
             currIndex = 0;
         }
 
-        if(to_move.length === 0){
+        if(to_moderators.length === 0 && to_move.length === 0){
             break;
         }
 
     }
     return message.channel.send(`Moved ${counter} members to ${parsed.arguments[0]} breakout channels.`);
+}
+
+MeetingsUtils.split = function(parsed, message, guildSettings){
+    internalSplit(parsed, message, guildSettings, []);
 }
 
 MeetingsUtils.unsplit = async function(parsed, message, guildSettings){
@@ -96,7 +126,7 @@ MeetingsUtils.pickRand = function(parsed, message, guildSettings){
 
     let currentChannelMembers = message.member.voice.channel.members.array();
 
-    let chosen = currentChannelMembers[Math.floor(Math.random() * currentChannelMembers.length)]
+    let chosen = currentChannelMembers[currentChannelMembers.length * Math.random() | 0]
 
     return message.channel.send(`<@${chosen.id}> was chosen!`);
 }
@@ -281,6 +311,10 @@ MeetingsUtils.setAdmin = async function(parsed, message, guildSettings){
     catch{
         return message.channel.send("There was an error updating the database.");
     }
+}
+
+MeetingsUtils.moderatedSplit = function(parsed, message, guildSettings){
+    internalSplit(parsed, message, guildSettings, guildSettings.moderators)
 }
 
 module.exports = MeetingsUtils;

@@ -7,6 +7,7 @@ let Settings = {
     },
     generalChannel: String,
     breakoutChannels: [String],
+    moderators: [String],
     commandPrefix: {
         type: String,
         required: false,
