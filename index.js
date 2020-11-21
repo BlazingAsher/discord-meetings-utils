@@ -10,21 +10,30 @@ const MeetingsUtils = require('./app/MeetingsUtils');
 const Settings = require('./models/SettingsModel');
 const SettingsManager = require('./app/SettingsManager');
 
+// function, description, aliases, adminOnly
 const commandMap = {
-    split: [MeetingsUtils.split, "Split all users in the general channel into the breakout channels. Specify the number of rooms desired as an argument."],
-    unsplit: [MeetingsUtils.unsplit, "Move all members in the breakout channels to the general channel."],
-    pickRand: [MeetingsUtils.pickRand, "Pick a random person in the current voice channel."],
-    makeOrder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel."],
-    muteAll: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted."],
-    unmuteAll: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel."],
-    setGeneral: [MeetingsUtils.setGeneral, "Sets the general meeting room."],
-    addBreakout: [MeetingsUtils.addBreakout, "Adds the current voice channel as a breakout channel."],
-    removeBreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel."],
-    listBreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels."],
-    setAdmin: [MeetingsUtils.setAdmin, "Sets the role with the given ID as the bot admin role."],
-    addModerator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list. Mention any users (or use \"self\") as arguments."],
-    removeModerator: [MeetingsUtils.removeModerator, "Removes a user from the moderator list. Give the user ID as an argument."],
-    listModerators: [MeetingsUtils.listModerators, "Lists current breakout moderators."]
+    split: [MeetingsUtils.split, "Split all users in the general channel into the breakout channels. Specify the number of rooms desired as an argument.", [], true],
+    unsplit: [MeetingsUtils.unsplit, "Move all members in the breakout channels to the general channel.", [], true],
+    pickrand: [MeetingsUtils.pickRand, "Pick a random person in the current voice channel.", [], false],
+    makeorder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel.", [], false],
+    muteall: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted.", ["mall"], true],
+    unmuteall: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel.", "umall", [], true],
+    setgeneral: [MeetingsUtils.setGeneral, "Sets the general meeting room.", [], true],
+    addbreakout: [MeetingsUtils.addBreakout, "Adds the current voice channel as a breakout channel.", [], true],
+    removebreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel.", [], true],
+    listbreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels.", [], false],
+    setadmin: [MeetingsUtils.setAdmin, "Sets the role with the given ID as the bot admin role.", [], true],
+    addmoderator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list. Mention any users (or use \"self\") as arguments.", ["amod"], true],
+    removemoderator: [MeetingsUtils.removeModerator, "Removes a user from the moderator list. Give the user ID as an argument.", ["rmmod"], true],
+    listmoderators: [MeetingsUtils.listModerators, "Lists current breakout moderators.", ["lmod", "lsmod"], false]
+}
+
+let aliasMap = {}
+
+for(let command of Object.keys(commandMap)){
+    for(let alias of commandMap[command][2]){
+        aliasMap[alias] = command;
+    }
 }
 
 mongoose.connect(process.env.MONGO_DB_URL, {useNewUrlParser: true});
@@ -53,23 +62,49 @@ SettingsManager.loadSettings()
         // call parse function
         let guildSettings = SettingsManager.getGuildSettings(message.guild.id);
 
-        console.log("Current settings: " + guildSettings);
+        if(process.env.ENVIRONMENT === "development"){
+            console.log("Current settings: " + guildSettings);
+        }
+
         if(guildSettings){
             const parsed = parse(message, guildSettings.commandPrefix, { allowSpaceBeforeCommand: true });
 
             // check for valid command
             if (!parsed.success) return;
 
+            let parsedCommand = parsed.command.toLowerCase();
 
-            if(commandMap.hasOwnProperty(parsed.command)){
-                return commandMap[parsed.command][0](client, parsed, message, guildSettings);
-            }
-            else if(parsed.command === "help"){
+            if(parsedCommand === "help"){
                 let output = `Current command prefix: \`${guildSettings.commandPrefix}\`\n\n`;
                 for(let entry of Object.keys(commandMap)){
-                    output+=`${entry} - ${commandMap[entry][1]}\n`;
+                    if(!commandMap[entry][3]){
+                        output+=`**${entry}**\n\t - ${commandMap[entry][1]}\n\t - Aliases: ${commandMap[entry][2].length > 0 ? commandMap[entry][2].toString() : "none"}\n`;
+                    }
                 }
                 return message.channel.send(output);
+            }
+            else if(parsedCommand === "ahelp"){
+                // admin help
+                if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
+                    return;
+                }
+
+                let output = `**Admin commands:**\nCurrent command prefix: \`${guildSettings.commandPrefix}\`\n\n`;
+                for(let entry of Object.keys(commandMap)){
+                    if(commandMap[entry][3]){
+                        output+=`**${entry}**\n\t - ${commandMap[entry][1]}\n\t - Aliases: ${commandMap[entry][2].length > 0 ? commandMap[entry][2].toString() : "none"}\n`;
+                    }
+                }
+                return message.channel.send(output);
+            }
+            else{
+                if(aliasMap[parsedCommand]){
+                    parsedCommand = aliasMap[parsedCommand];
+                }
+
+                if(commandMap.hasOwnProperty(parsedCommand)){
+                    return commandMap[parsedCommand][0](client, parsed, message, guildSettings);
+                }
             }
         }
         else{

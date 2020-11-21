@@ -158,7 +158,6 @@ MeetingsUtils.makeOrder = function(client, parsed, message, guildSettings){
     for(let i=0;i<currentChannelMembers.length;i++){
         output+=`${i+1}. <@${currentChannelMembers[i].id}>\n`;
     }
-    console.log(output);
     return message.channel.send(output);
 }
 
@@ -409,8 +408,6 @@ MeetingsUtils.listModerators = async function(client, parsed, message, guildSett
     let output = "Current breakout moderators:\n";
     for(const moderator of guildSettings.moderators){
         const tempUser = await client.guilds.cache.get(guildSettings.guild).members.fetch(moderator);
-        console.log(tempUser);
-        //const tempUser = client.users.cache.get(moderator);
         output += `- ${tempUser ? tempUser.displayName + " (" + moderator + ")" : moderator}\n`;
     }
     return message.channel.send(output);

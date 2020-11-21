@@ -10,7 +10,6 @@ SettingsManager.loadSettings = async function(){
     for(let setting of allSettings){
         BotSettings[setting.guild] = setting;
     }
-    console.log(BotSettings);
 }
 
 SettingsManager.getGuildSettings = function(guildID){
