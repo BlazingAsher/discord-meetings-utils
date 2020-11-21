@@ -179,7 +179,14 @@ MeetingsUtils.muteAll = async function(client, parsed, message, guildSettings){
                 excluded.push(message.member.id);
             }
             else{
-                excluded.push(exclusion.substring(3, exclusion.length-1));
+                let tempUser = getUserFromMention(exclusion);
+                if(isNaN(tempUser)){
+                    message.channel.send(`${tempUser} is not a valid user. Skipping.`);
+                }
+                else{
+                    excluded.push(tempUser);
+                }
+
             }
         }
     }
