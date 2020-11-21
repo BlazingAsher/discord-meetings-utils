@@ -12,7 +12,22 @@ function shuffleArray(array) {
     }
 }
 
-async function internalSplit(parsed, message, guildSettings, moderators) {
+// returns ID of user from mention
+function getUserFromMention(mention) {
+    if (!mention) return;
+
+    if (mention.startsWith('<@') && mention.endsWith('>')) {
+        mention = mention.slice(2, -1);
+
+        if (mention.startsWith('!')) {
+            mention = mention.slice(1);
+        }
+
+        return mention;
+    }
+}
+
+async function internalSplit(client, parsed, message, guildSettings, moderators) {
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -91,11 +106,11 @@ async function internalSplit(parsed, message, guildSettings, moderators) {
     return message.channel.send(`Moved ${counter} members to ${parsed.arguments[0]} breakout channels.`);
 }
 
-MeetingsUtils.split = function(parsed, message, guildSettings){
-    internalSplit(parsed, message, guildSettings, []);
+MeetingsUtils.split = function(client, parsed, message, guildSettings){
+    internalSplit(client, parsed, message, guildSettings, []);
 }
 
-MeetingsUtils.unsplit = async function(parsed, message, guildSettings){
+MeetingsUtils.unsplit = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -119,7 +134,7 @@ MeetingsUtils.unsplit = async function(parsed, message, guildSettings){
     return message.channel.send(`Moved ${counter} members from breakout channels to the main channel.`);
 }
 
-MeetingsUtils.pickRand = function(parsed, message, guildSettings){
+MeetingsUtils.pickRand = function(client, parsed, message, guildSettings){
     if(message.member.voice.channel === null){
         return message.channel.send("You are not currently connected to a voice channel!");
     }
@@ -131,7 +146,7 @@ MeetingsUtils.pickRand = function(parsed, message, guildSettings){
     return message.channel.send(`<@${chosen.id}> was chosen!`);
 }
 
-MeetingsUtils.makeOrder = function(parsed, message, guildSettings){
+MeetingsUtils.makeOrder = function(client, parsed, message, guildSettings){
     if(message.member.voice.channel === null){
         return message.channel.send("You are not currently connected to a voice channel!");
     }
@@ -147,7 +162,7 @@ MeetingsUtils.makeOrder = function(parsed, message, guildSettings){
     return message.channel.send(output);
 }
 
-MeetingsUtils.muteAll = async function(parsed, message, guildSettings){
+MeetingsUtils.muteAll = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -182,7 +197,7 @@ MeetingsUtils.muteAll = async function(parsed, message, guildSettings){
     return message.channel.send(`Muted ${counter} users.`);
 }
 
-MeetingsUtils.unMuteAll = async function(parsed, message, guildSettings){
+MeetingsUtils.unMuteAll = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -203,7 +218,7 @@ MeetingsUtils.unMuteAll = async function(parsed, message, guildSettings){
     return message.channel.send(`Unmuted ${counter} users.`);
 }
 
-MeetingsUtils.setGeneral = async function(parsed, message, guildSettings){
+MeetingsUtils.setGeneral = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -228,7 +243,7 @@ MeetingsUtils.setGeneral = async function(parsed, message, guildSettings){
     }
 }
 
-MeetingsUtils.addBreakout = async function(parsed, message, guildSettings){
+MeetingsUtils.addBreakout = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -255,7 +270,7 @@ MeetingsUtils.addBreakout = async function(parsed, message, guildSettings){
     }
 }
 
-MeetingsUtils.removeBreakout = async function(parsed, message, guildSettings){
+MeetingsUtils.removeBreakout = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -282,7 +297,7 @@ MeetingsUtils.removeBreakout = async function(parsed, message, guildSettings){
     }
 }
 
-MeetingsUtils.listBreakouts = function(parsed, message, guildSettings){
+MeetingsUtils.listBreakouts = function(client, parsed, message, guildSettings){
     let output = "Current breakout channels:\n"
     for(let breakoutID of guildSettings.breakoutChannels){
         output += "- " + message.guild.channels.cache.get(breakoutID).name + "\n";
@@ -290,7 +305,7 @@ MeetingsUtils.listBreakouts = function(parsed, message, guildSettings){
     return message.channel.send(output);
 }
 
-MeetingsUtils.setAdmin = async function(parsed, message, guildSettings){
+MeetingsUtils.setAdmin = async function(client, parsed, message, guildSettings){
     if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
         return;
     }
@@ -313,8 +328,93 @@ MeetingsUtils.setAdmin = async function(parsed, message, guildSettings){
     }
 }
 
-MeetingsUtils.moderatedSplit = function(parsed, message, guildSettings){
-    internalSplit(parsed, message, guildSettings, guildSettings.moderators)
+MeetingsUtils.addModerator = async function(client, parsed, message, guildSettings){
+    if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
+        return;
+    }
+
+    if(parsed.arguments.length < 1){
+        return message.channel.send("Please mention at least one person to be added as a moderator!");
+    }
+
+    let to_add = [];
+
+    for(let mention of parsed.arguments){
+        if(mention === "self"){
+            to_add.push(message.member.id);
+        }
+        else{
+            let tempID = getUserFromMention(mention);
+            if(isNaN(tempID)){
+                return message.channel.send("Please check to ensure that you are mentioning a valid user!");
+            }
+            if(guildSettings.moderators.indexOf(tempID) === -1){
+                to_add.push(tempID);
+            }
+            else{
+                message.channel.send(`The user <@${tempID}> is already a moderator. Skipping them and continuing.`);
+            }
+
+        }
+    }
+
+    await Settings.findOneAndUpdate({
+        guild: message.guild.id,
+    }, {
+        $push: {
+            moderators: {
+                $each: to_add
+            }
+        }
+    });
+    await SettingsManager.loadSettings();
+    return message.channel.send(`Successfully updated the moderator list.`);
+}
+
+MeetingsUtils.removeModerator = async function(client, parsed, message, guildSettings){
+    if(!message.member.hasPermission('ADMINISTRATOR') && !message.member.roles.has(guildSettings.adminRole)){
+        return;
+    }
+
+    if(parsed.arguments.length < 1){
+        return message.channel.send("Please give the ID of the person to remove as moderator!");
+    }
+
+
+    let mention = parsed.arguments[0];
+    if(mention === "self"){
+        mention = message.member.id;
+    }
+    await Settings.findOneAndUpdate({
+        guild: message.guild.id,
+    }, {
+        $push: {
+            moderators: {
+                $pull: {
+                    moderators: mention
+                }
+            }
+        }
+    });
+
+    await SettingsManager.loadSettings();
+    return message.channel.send(`Successfully updated the moderator list.`);
+
+}
+
+MeetingsUtils.listModerators = async function(client, parsed, message, guildSettings){
+    let output = "Current breakout moderators:\n";
+    for(const moderator of guildSettings.moderators){
+        const tempUser = await client.guilds.cache.get(guildSettings.guild).members.fetch(moderator);
+        console.log(tempUser);
+        //const tempUser = client.users.cache.get(moderator);
+        output += `- ${tempUser ? tempUser.displayName + " (" + moderator + ")" : moderator}\n`;
+    }
+    return message.channel.send(output);
+}
+
+MeetingsUtils.moderatedSplit = function(client, parsed, message, guildSettings){
+    internalSplit(client, parsed, message, guildSettings, guildSettings.moderators)
 }
 
 module.exports = MeetingsUtils;

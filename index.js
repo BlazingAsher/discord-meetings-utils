@@ -22,6 +22,8 @@ const commandMap = {
     removeBreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel."],
     listBreakouts: [MeetingsUtils.listBreakouts, "Lists all current breakout channels."],
     setAdmin: [MeetingsUtils.setAdmin, "Sets the role with the given ID as the bot admin role."],
+    addModerator: [MeetingsUtils.addModerator, "Adds a user to the breakout moderator list."],
+    listModerators: [MeetingsUtils.listModerators, "Lists current breakout moderators."]
 }
 
 mongoose.connect(process.env.MONGO_DB_URL, {useNewUrlParser: true});
@@ -59,7 +61,7 @@ SettingsManager.loadSettings()
 
 
             if(commandMap.hasOwnProperty(parsed.command)){
-                return commandMap[parsed.command][0](parsed, message, guildSettings);
+                return commandMap[parsed.command][0](client, parsed, message, guildSettings);
             }
             else if(parsed.command === "help"){
                 let output = `Current command prefix: \`${guildSettings.commandPrefix}\`\n\n`;
