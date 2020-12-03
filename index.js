@@ -17,7 +17,7 @@ const commandMap = {
     pickrand: [MeetingsUtils.pickRand, "Pick a random person in the current voice channel.", [], false],
     makeorder: [MeetingsUtils.makeOrder, "Randomly order all members connected to the current voice channel.", [], false],
     muteall: [MeetingsUtils.muteAll, "Mute everyone in the current voice channel. Mention any users (or use \"self\") as arguments to exclude them from being muted.", ["mall"], true],
-    unmuteall: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel.", "umall", [], true],
+    unmuteall: [MeetingsUtils.unMuteAll, "Unmute everyone in the current voice channel.", ["umall"], true],
     setgeneral: [MeetingsUtils.setGeneral, "Sets the general meeting room.", [], true],
     addbreakout: [MeetingsUtils.addBreakout, "Adds the current voice channel as a breakout channel.", [], true],
     removebreakout: [MeetingsUtils.removeBreakout, "Removes the current voice channel as a breakout channel.", [], true],
