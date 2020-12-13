@@ -93,8 +93,8 @@ async function internalSplit(client, parsed, message, guildSettings, moderators)
         try {
             await member.voice.setChannel(destination_channels[currIndex]);
         }
-        catch {
-            message.channel.send(`There was an error moving \`${member.displayName}\``);
+        catch (e){
+            message.channel.send(`There was an error moving \`${member.displayName}\`: **${e.name}** - ${e.message}`);
         }
         counter++;
 
@@ -134,8 +134,8 @@ MeetingsUtils.unsplit = async function(client, parsed, message, guildSettings){
             try{
                 await member.voice.setChannel(general_channel);
             }
-            catch {
-                message.channel.send(`There was an error moving \`${member.displayName}\``);
+            catch(e) {
+                message.channel.send(`There was an error moving \`${member.displayName}\`: **${e.name}** - ${e.message}`);
             }
             counter++;
         }
@@ -208,8 +208,8 @@ MeetingsUtils.muteAll = async function(client, parsed, message, guildSettings){
             try{
                 await member.voice.setMute(true);
             }
-            catch {
-                message.channel.send(`There was an error muting \`${member.displayName}\``)
+            catch(e) {
+                message.channel.send(`There was an error muting \`${member.displayName}\`: **${e.name}** - ${e.message}`)
             }
 
             counter++;
@@ -235,8 +235,8 @@ MeetingsUtils.unMuteAll = async function(client, parsed, message, guildSettings)
         try{
             await member.voice.setMute(false);
         }
-        catch {
-            message.channel.send(`There was an error unmuting \`${member.displayName}\``)
+        catch(e) {
+            message.channel.send(`There was an error unmuting \`${member.displayName}\`: **${e.name}** - ${e.message}`);
         }
         counter++;
         await sleep(150);
